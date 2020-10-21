@@ -1,12 +1,23 @@
 package com.quence.sailaction.logout;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.List;
+
+import org.apache.olingo.odata2.api.exception.ODataException;
 
 import com.neotys.extensions.action.ActionParameter;
 import com.neotys.extensions.action.engine.ActionEngine;
 import com.neotys.extensions.action.engine.Context;
 import com.neotys.extensions.action.engine.SampleResult;
+import com.neotys.rest.dataexchange.client.DataExchangeAPIClient;
+import com.neotys.rest.dataexchange.client.DataExchangeAPIClientFactory;
+import com.neotys.rest.dataexchange.model.ContextBuilder;
+import com.neotys.rest.dataexchange.model.EntryBuilder;
+import com.neotys.rest.dataexchange.model.StatusBuilder;
+import com.neotys.rest.error.NeotysAPIException;
 import com.quence.sailaction.common.Client;
 
 public class SailLogOutActionEngine implements ActionEngine {
@@ -32,6 +43,13 @@ public class SailLogOutActionEngine implements ActionEngine {
 		    c.disconnect();
 		    } catch (IOException e) {
 			// TODO Auto-generated catch block
+		    	try {
+					FailedTest();
+				} catch (GeneralSecurityException | IOException | ODataException | URISyntaxException
+						| NeotysAPIException | InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -50,4 +68,15 @@ public class SailLogOutActionEngine implements ActionEngine {
 		
 	}
 
+	private void FailedTest( ) throws GeneralSecurityException, IOException, ODataException, URISyntaxException, NeotysAPIException, InterruptedException {
+ 		final StatusBuilder sb = new StatusBuilder();
+ 		sb.state(com.neotys.rest.dataexchange.model.Status.State.FAIL);
+    	sb.build();
+		final ContextBuilder cb = new ContextBuilder();		
+		final DataExchangeAPIClient client = DataExchangeAPIClientFactory.newClient("http://localhost:7400/DataExchange/v1/Service.svc/");
+	final EntryBuilder eb = new EntryBuilder(Arrays.asList("_ScriptName_", "Entry", "Path"), System.currentTimeMillis());
+					eb.status(sb.build());
+					client.addEntry(eb.build());
+
+	}
 }

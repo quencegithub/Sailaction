@@ -30,6 +30,7 @@ public class SailLogonAction implements Action {
 		final List<ActionParameter> parameters = new ArrayList<ActionParameter>();
 		parameters.add(new ActionParameter("Path",""));
 		parameters.add(new ActionParameter("Client",""));
+		
 
 		// TODO Auto-generated method stub
 		return parameters;

@@ -29,7 +29,7 @@ public class SailSendMsgAction implements Action{
 	public List<ActionParameter> getDefaultActionParameters() {
 		final List<ActionParameter> parameters = new ArrayList<ActionParameter>();
 		parameters.add(new ActionParameter("Cycle",""));
-		parameters.add(new ActionParameter("Delay",""));
+		//parameters.add(new ActionParameter("Delay",""));
 
 		// TODO Auto-generated method stub
 		return parameters;

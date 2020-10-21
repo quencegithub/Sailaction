@@ -31,16 +31,11 @@ public final class TC {
         this.password = Ini.getValue(clientName, "password");
         this.sessionID = "    ";
         this.time =Ini.getValue(clientName, "TC").substring(24, 30);
-        
-        
-        if (isFirst) {
-            this.exchangeMessageID = "      ";
-        } else {
-            this.exchangeMessageID = "      ";
-        }
-        this.inactivityInterval = "  ";
-        this.messageTypesNumber = "44";
-        this.messageTypes = "ERIEIXKBKDKEKFKGKIKJKMKNKOKPKSKXKYKZLAMBMMMUNCNDNGNINLNMNPNTNUNXNYNZPNPUTATETHTKTLTMTOTTBP";
+        this.inactivityInterval =Ini.getValue(clientName, "TC").substring(30, 32);
+        this.exchangeMessageID = Ini.getValue(clientName, "TC").substring(32, 38);
+        this.messageTypesNumber = Ini.getValue(clientName, "TC").substring(38, 40);
+        this.messageTypes = Ini.getValue(clientName, "TC").substring(40, Integer.parseInt(this.messageTypesNumber)*2+40);
+     // this.messageTypes = "ERIEIXKBKDKEKFKGKIKJKMKNKOKPKSKXKYKZLAMBMMMUNCNDNGNMNPNTNUNXNYNZPNPUTATETHTKTLTMTOTTBP";
     }
     
     /**

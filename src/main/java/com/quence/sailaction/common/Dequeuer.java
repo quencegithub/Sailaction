@@ -28,7 +28,7 @@ public class Dequeuer extends Thread {
         this.instantNow = this.client.getInstantNow();
         this.nanoSeconds = this.client.getNanoSeconds();
         this.clientName = this.client.getClientName();
-        System.out.println(dtf.format(now()) + " Dequeuer:Dequeuer:end");
+      //  System.out.println(dtf.format(now()) + " Dequeuer:Dequeuer:end");
     }
 
     /**
@@ -38,7 +38,7 @@ public class Dequeuer extends Thread {
     public void run() {
     	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
         
-    	System.out.println(dtf.format(now()) + " Dequeuer:run:started");
+    	//System.out.println(dtf.format(now()) + " Dequeuer:run:started");
     	while (true) {
             try {
                 sleep(10);
@@ -53,7 +53,7 @@ public class Dequeuer extends Thread {
                     parts[0] = parts[0].substring(0,26) + "Z";
                     */
                     String message = this.logMessages.get(0);
-                    //System.out.println(dtf.format(now()) + " Dequeuer:run:loggedmessage:" + message);
+                   // System.out.println(dtf.format(now()) + " Dequeuer:run:logged message:" + message);
                     String[] parts = message.split("\\s");
                     long nanoToAdd = Long.parseLong(parts[0]) - this.nanoSeconds;
                     parts[0] = this.instantNow.plusNanos(nanoToAdd).truncatedTo(ChronoUnit.MICROS).toString();
@@ -63,10 +63,10 @@ public class Dequeuer extends Thread {
                     Client.logFile.write(msg);
                     this.logMessages.remove(message);
                     Client.logFile.close();
-                    System.out.println(dtf.format(now()) + " Dequeuer:run:end");
+                   // System.out.println(dtf.format(now()) + " Dequeuer:run:end");
                 } catch (IOException ex) {
                     Logger.getLogger(Dequeuer.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println(dtf.format(now()) + " Dequeuer:run:IOException");
+                   // System.out.println(dtf.format(now()) + " Dequeuer:run:IOException");
                 }
             }
         }

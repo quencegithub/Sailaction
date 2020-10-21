@@ -40,6 +40,7 @@ public class Client extends Thread {
     private String sessionID = "";
     private String userSequenceID;
     private List<byte[]> messages;
+    private List<Long> delays;
     private String tsOut;
     private String tsIn;
     private String userID;
@@ -49,6 +50,8 @@ public class Client extends Thread {
     private volatile Instant instantNow;
     private volatile long nanoSeconds;
     private volatile List<String> logMessages;
+    private volatile AsynchronousSocketChannel channel;
+    //private Selector selector;
     
     private static int getValue(byte b) {
         if (b < 0) {
@@ -94,7 +97,7 @@ public class Client extends Thread {
         buffer = null;
         this.status = 0b00001000;    //0001 loggedin - //0100 waiting response - //1000 got messages
         this.logMessages = new ArrayList<>();
-        Dequeuer dequeuer = this.dequeuer;
+        //Dequeuer dequeuer = this.dequeuer;
         
         try {
             this.hbTimeout = Integer.parseInt(Ini.getValue(this.clientName, "heartbeat"));
@@ -102,30 +105,31 @@ public class Client extends Thread {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
         // instantiate Dequeuer class and start thread
-        /*
+       
         dequeuer = new Dequeuer(this);
-        Thread dequeuerTh = dequeuer;
-        dequeuerTh.start();
-        */
-        System.out.println(dtf.format(now()) + " Client:Client:end " + clientName);
+       
+       
+        //System.out.println(dtf.format(now()) + " Client:Client:end " + clientName);
     }
     
     public void loadMsgs(FileReader fr) throws IOException {
     	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
         buffer = new BufferedReader(fr);
         messages = new ArrayList<>();
+        delays = new ArrayList<>();
         String inputStr = buffer.readLine();
         while (inputStr != null) {
-            inputStr = inputStr.substring(0, 14) + Ini.getValue(this.clientName, "Trader_Id") + inputStr.substring(22);
-            
-            int inputLen = inputStr.length();
-            byte[] byteLen = Client.get4BytesLen(inputStr);
+        	String[] message= inputStr.split(",");
+        	message[1] = message[1].substring(0, 14) + Ini.getValue(this.clientName, "Trader_Id") + message[1].substring(22);
+            int inputLen = message[1].length();
+            byte[] byteLen = Client.get4BytesLen(message[1]);
             int messageLen = 4+inputLen+1+Client.getAlignmentSize(inputLen);
-            messages.add(ByteBuffer.allocate(messageLen).put(byteLen).put(inputStr.getBytes()).put(Client.ETX).put(Client.getAlignment(inputStr).getBytes()).array());
+            delays.add(Long.parseLong(message[0]));
+            messages.add(ByteBuffer.allocate(messageLen).put(byteLen).put(message[1].getBytes()).put(Client.ETX).put(Client.getAlignment(message[1]).getBytes()).array());
             inputStr = buffer.readLine();
         }
         buffer.close();
-        System.out.println(dtf.format(now()) + " Client:loadMsgs:end");
+        //System.out.println(dtf.format(now()) + " Client:loadMsgs:end");
     }
     
     public void sendMsg(byte[] message ) throws IOException {
@@ -137,12 +141,16 @@ public class Client extends Thread {
                 this.userSequenceID = "0" + this.userSequenceID;
             }
             byte[] msg = new byte[message.length];
-            System.arraycopy(message, 0, msg, 0, 22);
-            System.arraycopy(this.userSequenceID.getBytes(), 0, msg, 22, 8);
-            System.arraycopy(message, 30, msg, 30, message.length-30);
+            System.arraycopy(message, 0, msg, 0, 26);
+            //System.out.println("the msg first stringCopy--->"+new String(msg));
 
+            System.arraycopy(this.userSequenceID.getBytes(), 0, msg, 26, 8);
+           // System.out.println("the msg second stringCopy--->"+new String(msg));
+            System.arraycopy(message, 34, msg, 34, message.length-34);
+             
+           // System.out.println("the msg third stringCopy--->"+new String(msg));
             this.writeBus(msg);
-             System.out.println(dtf.format(now()) + " Client:sendMsg:end");
+            // System.out.println(dtf.format(now()) + " Client:sendMsg:end");
     }
     
     public void sendLogin() {
@@ -152,7 +160,7 @@ public class Client extends Thread {
             TC tc = new TC(this.getClientName(), sessionID.isEmpty());
             String tcStr = tc.toString();
             this.writeTec(tcStr.getBytes());
-            System.out.println(dtf.format(now()) + "Client:sendLogin:end  TC : ");
+            //System.out.println(dtf.format(now()) + "Client:sendLogin:end  TC : ");
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
           //  System.out.println(dtf.format(now()) + "Client:sendLogin:TC IOException");
@@ -165,7 +173,7 @@ public class Client extends Thread {
             TD td = new TD(this.clientName, this.sessionID);
             String tdStr = td.toString();     
             this.writeTec(tdStr.getBytes());
-            System.out.println(dtf.format(now()) + "Client:sendLogout:end");
+            //System.out.println(dtf.format(now()) + "Client:sendLogout:end");
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
            // System.out.println(dtf.format(now()) + "Client:sendLogin:TD IOException");
@@ -174,25 +182,27 @@ public class Client extends Thread {
 
     public void connect(int port) throws IOException {
     	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
-        Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+        //Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
 
         // Instantiate the thread for Client
         Client clientThread = this;
         
         //Dequeuer dequeuer = this.dequeuer;
         InetSocketAddress address = new InetSocketAddress(Ini.getValue("server", "address"), Integer.parseInt(Ini.getValue("server", "port")));
-        logMessages.add( timeStamp +"  : "+ Client.getTime() + " " + this.userID + " X: Connecting\n");
+        logMessages.add(Client.getTime() + " " + this.userID + " X: Connecting\n");
         channel = AsynchronousSocketChannel.open();
-        System.out.println(dtf.format(now()) + "Client:connect:AsynchronousSocketChannel.opened");
+        //System.out.println(dtf.format(now()) + "Client:connect:AsynchronousSocketChannel.opened");
         channel.connect(address, null,
             new CompletionHandler() {
                 @Override
                 public void completed(Object result, Object attachment) {
                      Thread ClientThread = clientThread;
                      ClientThread.start();
+                     Thread dequeuerTh = dequeuer;
+                     dequeuerTh.start();
       
                     sendLogin(); // send the login message TC 
-                    System.out.println(dtf.format(now()) + "Client:connect:AsynchronousSocketChannel.connect:completed:sendLogin successfull");
+                 //   System.out.println(dtf.format(now()) + "Client:connect:AsynchronousSocketChannel.connect:completed:sendLogin successfull");
                 }
                 
                 @Override
@@ -201,7 +211,7 @@ public class Client extends Thread {
                 }
             }
         );
-        System.out.println(dtf.format(now()) + "Client:connect:channel.connect successfull");
+        //System.out.println(dtf.format(now()) + "Client:connect:channel.connect successfull");
     }
     
     public void disconnect() throws IOException {
@@ -214,7 +224,7 @@ public class Client extends Thread {
     private void startRead(AsynchronousSocketChannel channel) {
     	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
 		Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
-        System.out.println(timeStamp +"  : Start Read function AsynchronousSocket " + "Start read");
+        //System.out.println(timeStamp +"  : Start Read function AsynchronousSocket " + "Start read");
         ByteBuffer lenBuffer = ByteBuffer.allocate(4);
         Client c = this;
         
@@ -224,21 +234,25 @@ public class Client extends Thread {
                 int bufArray = Client.getValue(lenBuffer.get(3))*255*255*255 + Client.getValue(lenBuffer.get(2))*255*255 + Client.getValue(lenBuffer.get(1))*255 + Client.getValue(lenBuffer.get(0));
                 ByteBuffer buffer = ByteBuffer.allocate(bufArray + 1 + Client.getAlignmentSize(bufArray));
                 //System.out.println(result);
-                System.out.println(timeStamp +  "  : Message length is: " + (bufArray + 1 + Client.getAlignmentSize(bufArray)));
+                int removebyte =  1 + Client.getAlignmentSize(bufArray) ;
+               // System.out.println(timeStamp +  "  : Message length is: " + (bufArray + removebyte));
                 channel.read(buffer, channel, new CompletionHandler() {
                     @Override
                     public void completed(Object result, Object attachment) {
                         tsIn = Client.getTime();
-                        String message = (new String(buffer.array())).trim();
-                        message = message.substring(0, message.length());
+                        //System.out.println("channel.read completed:--->" + (new String(buffer.array()))+"<----------" );
+                        String message = (new String(buffer.array()));
+                        message = message.substring(0, message.length()-removebyte);
+                       // System.out.println("channel.read completed:--->" + message+"<----------" );
+
                         if (message.startsWith("TK")) { // get the TK returned message and extract the initial UserSequenceID
                                 logMessages.add(tsIn + " " + c.userID + " I: " + message + "\n");
                                 c.sessionID = message.substring(2, 6);
                                 c.userSequenceID = message.substring(6);
-                                System.out.println(dtf.format(now()) + "Client:startRead:channel.read:completed:TK:userSequenceID: " + c.userSequenceID);
-                        } else {
+                               // System.out.println(dtf.format(now()) + "Client:startRead:channel.read:completed:TK:userSequenceID: " + c.userSequenceID);
+                        } else if(!message.startsWith("TH")) {
                             logMessages.add(tsIn + " " + c.userID + " I: " + message + "\n");
-                            System.out.println(dtf.format(now()) + "Client:startRead:channel.read:completed: " + message);
+                           // System.out.println(dtf.format(now()) + "Client:startRead:channel.read:completed: " + message);
                         }
                         startRead(channel);
                     }
@@ -249,7 +263,7 @@ public class Client extends Thread {
                         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                     }
                 });
-                System.out.println(dtf.format(now()) + "Client:startRead:channel.read2:successful");
+                //System.out.println(dtf.format(now()) + "Client:startRead:channel.read2:successful");
             }
 
             @Override
@@ -257,7 +271,7 @@ public class Client extends Thread {
             	System.out.println(dtf.format(now()) + "Client:startRead:channel.read1:failed:");
             }
         });
-         System.out.println(dtf.format(now()) + "Client:startRead:channel.read1:successful");
+        // System.out.println(dtf.format(now()) + "Client:startRead:channel.read1:successful");
     }
     @Override
     public void run() {
@@ -265,10 +279,8 @@ public class Client extends Thread {
         if (channel != null && channel.isOpen()) {
             // start reading received messages 
         	startRead(channel);
-            System.out.println(dtf.format(now()) + "Client:run:Thread started:ChannelOpen: " + channel);
-        } else  {
-        	System.out.println(dtf.format(now()) + "Client:run:Thread started:ChannelNotOpen: " + channel);
-        }
+            //System.out.println(dtf.format(now()) + "Client:run:Thread started:ChannelOpen: " + channel);
+        } 
     }
 
     public void writeTec(byte[] input) throws IOException {
@@ -287,7 +299,7 @@ public class Client extends Thread {
                     tsOut = Client.getTime();
                     String message = new String(input);
                     logMessages.add(tsOut + " " + c.userID + " O: " + message + "\n");
-                   System.out.println(dtf.format(now()) + "Client:writeTec:channel.write:completed:sentMessage: " + message);
+                  // System.out.println(dtf.format(now()) + "Client:writeTec:channel.write:completed:sentMessage: " + message);
                 }
                 @Override
                 public void failed(Throwable exc, Object attachment) {
@@ -295,7 +307,7 @@ public class Client extends Thread {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
-            System.out.println(dtf.format(now()) + "Client:writeTec:channel.write: successful");
+            //System.out.println(dtf.format(now()) + "Client:writeTec:channel.write: successful");
         }
     }
     
@@ -312,7 +324,7 @@ public class Client extends Thread {
                     String message = (new String(input)).trim();
                     message = message.substring(4, message.length());
                     logMessages.add(tsOut + " " + c.userID + " O: " + message + "\n");
-                     System.out.println(dtf.format(now()) + "Client:writeBus:channel.write:completed:sentMessage: " + message);
+                     //System.out.println(dtf.format(now()) + "Client:writeBus:channel.write:completed:sentMessage: " + message);
                    // messages.remove(0);
                 }
                 @Override
@@ -321,12 +333,11 @@ public class Client extends Thread {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
-           System.out.println(dtf.format(now()) + "Client:writeBus:channel.write: successful");
+           //System.out.println(dtf.format(now()) + "Client:writeBus:channel.write: successful");
         }
     }
 
-    private volatile AsynchronousSocketChannel channel;
-    Selector selector;
+
 
     /**
      * @return the logged
@@ -439,6 +450,11 @@ public class Client extends Thread {
     public  String getUserSequenceID() {	
     	return  userSequenceID;
     }
+    public ArrayList<Long> getDelays(){
+    	
+    	return (ArrayList<Long>) delays;
+    }
+    
     public ArrayList<byte[]> getMessages(){
 		return (ArrayList<byte[]>) messages;   	
     }
