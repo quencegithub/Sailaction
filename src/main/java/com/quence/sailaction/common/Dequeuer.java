@@ -41,7 +41,7 @@ public class Dequeuer extends Thread {
     	//System.out.println(dtf.format(now()) + " Dequeuer:run:started");
     	while (true) {
             try {
-                sleep(10);
+                sleep(1);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Dequeuer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -53,7 +53,9 @@ public class Dequeuer extends Thread {
                     parts[0] = parts[0].substring(0,26) + "Z";
                     */
                     String message = this.logMessages.get(0);
-                   // System.out.println(dtf.format(now()) + " Dequeuer:run:logged message:" + message);
+                    System.out.println("the Dequeuer:run:logged message: ---->>>>" + message+"<<<<<------------");
+                    if(message!=null) {
+                 // System.out.println(dtf.format(now()) + " Dequeuer:run:logged message:" + message);
                     String[] parts = message.split("\\s");
                     long nanoToAdd = Long.parseLong(parts[0]) - this.nanoSeconds;
                     parts[0] = this.instantNow.plusNanos(nanoToAdd).truncatedTo(ChronoUnit.MICROS).toString();
@@ -63,10 +65,10 @@ public class Dequeuer extends Thread {
                     Client.logFile.write(msg);
                     this.logMessages.remove(message);
                     Client.logFile.close();
+                    }
                    // System.out.println(dtf.format(now()) + " Dequeuer:run:end");
-                } catch (IOException ex) {
-                    Logger.getLogger(Dequeuer.class.getName()).log(Level.SEVERE, null, ex);
-                   // System.out.println(dtf.format(now()) + " Dequeuer:run:IOException");
+                } catch (Exception ex) {
+                    System.out.println( " Dequeuer:run:Exception"+ ex.getStackTrace());
                 }
             }
         }

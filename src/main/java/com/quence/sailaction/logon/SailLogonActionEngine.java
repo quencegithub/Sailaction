@@ -1,10 +1,12 @@
 package com.quence.sailaction.logon;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.channels.UnresolvedAddressException;
 import java.security.GeneralSecurityException;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -33,7 +35,7 @@ import java.time.format.DateTimeFormatter;
 import static java.time.LocalDateTime.*;
 
 public class SailLogonActionEngine implements ActionEngine {
-  public static   String Path = null;
+  public static String Path = null;
   private List<byte[]> messages;
   private BufferedReader buffer;
   private   String clientName = null;
@@ -62,6 +64,8 @@ public class SailLogonActionEngine implements ActionEngine {
  
 		sampleResult.sampleStart();
  		try {
+ 			System.out.println("checkparam");
+ 		   checkParms(clientName);
  			// instanzio classe Client 
 			c = new Client(clientName);
 			//System.out.println(dtf.format(now()) + " SailLogonActionEngine:SampleResult: Class Client initialized");
@@ -72,28 +76,29 @@ public class SailLogonActionEngine implements ActionEngine {
 		}
  
 		try {
+			
 			 c.loadMsgs(new FileReader(Ini.getValue(clientName, "messagesOUT"))); 
 		 	 //System.out.println(dtf.format(now()) + " SailLogonActionEngine:SampleResult:Msg loaded in memory");
  			 c.connect(Integer.parseInt(Ini.getValue("server", "port")));
+ 	
  		 	 //System.out.println(dtf.format(now()) + " SailLogonActionEngine:SampleResult:c.connect done");
 
  			// do {}while(c.getUserSequenceID().isEmpty());
 	    
 		    context.getCurrentVirtualUser().put("client",c);
 		    context.getCurrentVirtualUser().put("messages",c.getMessages());
+		    context.getCurrentVirtualUser().put("messagetype",c.getMessageType());
+
 		    context.getCurrentVirtualUser().put("delays",c.getDelays());
 		    context.getCurrentVirtualUser().put("size",c.getMessages().size());
 			context.getCurrentVirtualUser().put("generate",0);
-		    } catch (IOException e) {
+			context.getCurrentVirtualUser().put("BD",0);
+			context.getCurrentVirtualUser().put("QP",0);
+			context.getCurrentVirtualUser().put("OE",0);
+
+		    } catch (IOException | UnresolvedAddressException  e) {
 		    	// TODO Auto-generated catch block
-		    	try {
-					FailedTest();
-				} catch (GeneralSecurityException | IOException | ODataException | URISyntaxException
-						| NeotysAPIException | InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-		     //	System.out.println(dtf.format(now()) + " SailLogonActionEngine:SampleResult:Client class instantiate error");
+                 System.out.println(dtf.format(now()) + " SailLogonActionEngine:SampleResult:connection Failed:  Check the IP ADDRESS or the SERVER PORT");
 		    	e.printStackTrace();
 		    	
 		}
@@ -123,9 +128,17 @@ public class SailLogonActionEngine implements ActionEngine {
     	sb.build();
 		final ContextBuilder cb = new ContextBuilder();		
 		final DataExchangeAPIClient client = DataExchangeAPIClientFactory.newClient("http://localhost:7400/DataExchange/v1/Service.svc/");
-	final EntryBuilder eb = new EntryBuilder(Arrays.asList("_ScriptName_", "Entry", "Path"), System.currentTimeMillis());
+		final EntryBuilder eb = new EntryBuilder(Arrays.asList("_ScriptName_", "Entry", "Path"), System.currentTimeMillis());
 					eb.status(sb.build());
 					client.addEntry(eb.build());
 
+	}
+	private static boolean checkParms(String clientName) throws FileNotFoundException, IOException {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
+		File f = new File(Path);
+		if(!f.exists()|| f.isDirectory()) {System.out.println(dtf.format(now()) + " SailLogonActionEngine:checkParms: ini file not found");   }
+		String tc = Ini.getValue(clientName, "TC");
+		if(tc==null) {System.out.println(dtf.format(now()) + " SailLogonActionEngine:checkParms: TC param not found");  }
+		return true;
 	}
 }

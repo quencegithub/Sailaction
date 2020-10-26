@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.Selector;
+import java.nio.channels.UnresolvedAddressException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.time.format.DateTimeFormatter;
@@ -38,19 +40,22 @@ public class Client extends Thread {
     private BufferedReader buffer;
     private int hbTimeout;
     private String sessionID = "";
+    private volatile String QuoteID = "1xxxxxx1";
     private String userSequenceID;
     private List<byte[]> messages;
     private List<Long> delays;
     private String tsOut;
     private String tsIn;
     private String userID;
+    private List<String> messagetype;
     public static Dequeuer dequeuer;
     protected static FileWriter logFile;
     protected static FileWriter debugFile;
     private volatile Instant instantNow;
     private volatile long nanoSeconds;
     private volatile List<String> logMessages;
-    private volatile AsynchronousSocketChannel channel;
+    private volatile AsynchronousSocketChannel  channel;
+    private boolean lock ;
     //private Selector selector;
     
     private static int getValue(byte b) {
@@ -97,6 +102,7 @@ public class Client extends Thread {
         buffer = null;
         this.status = 0b00001000;    //0001 loggedin - //0100 waiting response - //1000 got messages
         this.logMessages = new ArrayList<>();
+        this.lock= false;
         //Dequeuer dequeuer = this.dequeuer;
         
         try {
@@ -117,9 +123,11 @@ public class Client extends Thread {
         buffer = new BufferedReader(fr);
         messages = new ArrayList<>();
         delays = new ArrayList<>();
+        messagetype = new ArrayList<String>();
         String inputStr = buffer.readLine();
         while (inputStr != null) {
         	String[] message= inputStr.split(",");
+        	messagetype.add(message[1].substring(0, 2));
         	message[1] = message[1].substring(0, 14) + Ini.getValue(this.clientName, "Trader_Id") + message[1].substring(22);
             int inputLen = message[1].length();
             byte[] byteLen = Client.get4BytesLen(message[1]);
@@ -140,16 +148,23 @@ public class Client extends Thread {
             for (int i = 0; i < 8-usLen; i++) {
                 this.userSequenceID = "0" + this.userSequenceID;
             }
-            byte[] msg = new byte[message.length];
-            System.arraycopy(message, 0, msg, 0, 26);
-            //System.out.println("the msg first stringCopy--->"+new String(msg));
-
-            System.arraycopy(this.userSequenceID.getBytes(), 0, msg, 26, 8);
+            
+            //byte[] msg = new byte[message.length];
+           // System.arraycopy(message, 0, msg, 0, 26);
+          //  System.out.println("the msg first stringCopy--->"+new String(msg));
+            System.arraycopy(this.userSequenceID.getBytes(), 0, message, 26, 8);
            // System.out.println("the msg second stringCopy--->"+new String(msg));
-            System.arraycopy(message, 34, msg, 34, message.length-34);
-             
+           // System.arraycopy(message, 34, msg, 34, message.length-34);
            // System.out.println("the msg third stringCopy--->"+new String(msg));
-            this.writeBus(msg);
+           // System.arraycopy(this.QuoteID.getBytes(), 32, msg, 40, 32);
+           // System.out.println("the msg before copying of the quoteID--->"+new String(message));
+
+           if ((new String(message)).substring(4, 6).equals("QP")){
+        	  
+        	   System.arraycopy(this.QuoteID.getBytes(), 0, message, 36, 8); 
+               //System.out.println("the msg after  copying of the quoteID--->"+new String(message));
+           }
+            this.writeBus(message);
             // System.out.println(dtf.format(now()) + " Client:sendMsg:end");
     }
     
@@ -180,7 +195,7 @@ public class Client extends Thread {
         }
     }
 
-    public void connect(int port) throws IOException {
+    public void connect(int port) throws IOException,UnresolvedAddressException {
     	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
         //Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
 
@@ -192,6 +207,7 @@ public class Client extends Thread {
         logMessages.add(Client.getTime() + " " + this.userID + " X: Connecting\n");
         channel = AsynchronousSocketChannel.open();
         //System.out.println(dtf.format(now()) + "Client:connect:AsynchronousSocketChannel.opened");
+       
         channel.connect(address, null,
             new CompletionHandler() {
                 @Override
@@ -211,6 +227,7 @@ public class Client extends Thread {
                 }
             }
         );
+      
         //System.out.println(dtf.format(now()) + "Client:connect:channel.connect successfull");
     }
     
@@ -250,7 +267,11 @@ public class Client extends Thread {
                                 c.sessionID = message.substring(2, 6);
                                 c.userSequenceID = message.substring(6);
                                // System.out.println(dtf.format(now()) + "Client:startRead:channel.read:completed:TK:userSequenceID: " + c.userSequenceID);
-                        } else if(!message.startsWith("TH")) {
+                        } else if(message.startsWith("KD")) {
+                        	c.QuoteID=message.substring(40,48);
+                       
+                        }
+                        else if(!message.startsWith("TH")) {
                             logMessages.add(tsIn + " " + c.userID + " I: " + message + "\n");
                            // System.out.println(dtf.format(now()) + "Client:startRead:channel.read:completed: " + message);
                         }
@@ -314,9 +335,29 @@ public class Client extends Thread {
     public void writeBus(byte[] input) throws IOException {
     	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSSSSS");
 		Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+	    
         if (input != null) {
             Client c = this;
             byte[] msg = ByteBuffer.allocate(input.length).put(input).array();
+         	String BdMessage = (new String(input)).trim();
+        	//System.out.println(" the message is the follow "+BdMessage); 
+        	if((new String(input)).substring(4, 6).equals("BD")){
+           	         this.QuoteID="";
+            	//System.out.println(" we are in a BD message "+ c.QuoteID); 
+
+        	}
+             if((new String(input)).substring(4, 6).equals("QP")){
+            	 while(this.QuoteID.isEmpty()){try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}}
+            	 
+            	System.out.println(" the Quote ID is the follow "+ c.QuoteID); 
+    
+             } 
+            lock= true;
             channel.write(ByteBuffer.wrap(msg), null, new CompletionHandler() {
                 @Override
                 public void completed(Object result, Object attachment) {
@@ -324,19 +365,31 @@ public class Client extends Thread {
                     String message = (new String(input)).trim();
                     message = message.substring(4, message.length());
                     logMessages.add(tsOut + " " + c.userID + " O: " + message + "\n");
-                     //System.out.println(dtf.format(now()) + "Client:writeBus:channel.write:completed:sentMessage: " + message);
+                    lock=false;
+                      //System.out.println(dtf.format(now()) + "Client:writeBus:channel.write:completed:sentMessage: " + message);
                    // messages.remove(0);
                 }
                 @Override
                 public void failed(Throwable exc, Object attachment) {
                 	System.out.println(dtf.format(now()) + "Client:writeBus:channel.write:failed");
+                	lock= false;
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    
                 }
             });
+            while(lock){
+            	try {
+            		Thread.sleep(1);
+            	} catch (InterruptedException e) {
+            		// TODO Auto-generated catch block
+            		e.printStackTrace();
+            	}
+            };
            //System.out.println(dtf.format(now()) + "Client:writeBus:channel.write: successful");
         }
     }
 
+    
 
 
     /**
@@ -457,6 +510,9 @@ public class Client extends Thread {
     
     public ArrayList<byte[]> getMessages(){
 		return (ArrayList<byte[]>) messages;   	
+    }
+    public ArrayList<String> getMessageType(){
+		return (ArrayList<String>) messagetype;   	
     }
 }
  
