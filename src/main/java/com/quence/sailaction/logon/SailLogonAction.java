@@ -14,68 +14,68 @@ import com.neotys.extensions.action.ActionParameter;
 import com.neotys.extensions.action.engine.ActionEngine;
 
 public class SailLogonAction implements Action {
-	private static final String BUNDLE_NAME = "com.quence.sailaction.logon.bundle";
-	private static final String DISPLAY_NAME = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayName");
-	private static final String DISPLAY_PATH = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayPath");
-	private static final ImageIcon DISPLAY_ICON = new ImageIcon (SailLogonAction.class.getResource(ResourceBundle.getBundle(BUNDLE_NAME,Locale.getDefault()).getString("iconFile")));
 
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return "Sail logon";
-	}
+    private static final String BUNDLE_NAME = "com.quence.sailaction.logon.bundle";
+    private static final String DISPLAY_NAME = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayName");
+    private static final String DISPLAY_PATH = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayPath");
+    private static final ImageIcon DISPLAY_ICON = new ImageIcon(SailLogonAction.class.getResource(ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("iconFile")));
 
-	@Override
-	public List<ActionParameter> getDefaultActionParameters() {
-		final List<ActionParameter> parameters = new ArrayList<ActionParameter>();
-		parameters.add(new ActionParameter("Path",""));
-		parameters.add(new ActionParameter("Client",""));
-		
+    @Override
+    public String getType() {
+        // TODO Auto-generated method stub
+        return "Sail logon";
+    }
 
-		// TODO Auto-generated method stub
-		return parameters;
-	}
+    @Override
+    public List<ActionParameter> getDefaultActionParameters() {
+        final List<ActionParameter> parameters = new ArrayList<ActionParameter>();
+        parameters.add(new ActionParameter("Path", ""));
+        parameters.add(new ActionParameter("Client", ""));
 
-	@Override
-	public Class<? extends ActionEngine> getEngineClass() {
-		// TODO Auto-generated method stub
-		return SailLogonActionEngine.class;
-	}
+        // TODO Auto-generated method stub
+        return parameters;
+    }
 
-	@Override
-	public Icon getIcon() {
-		// TODO Auto-generated method stub
-		return DISPLAY_ICON;
-	}
+    @Override
+    public Class<? extends ActionEngine> getEngineClass() {
+        // TODO Auto-generated method stub
+        return SailLogonActionEngine.class;
+    }
 
-	@Override
-	public String getDescription() {
-		// TODO Auto-generated method stub
-		return " Sail Login Action ";
-	}
+    @Override
+    public Icon getIcon() {
+        // TODO Auto-generated method stub
+        return DISPLAY_ICON;
+    }
 
-	@Override
-	public String getDisplayName() {
-		// TODO Auto-generated method stub
-		return DISPLAY_NAME;
-	}
+    @Override
+    public String getDescription() {
+        // TODO Auto-generated method stub
+        return " Sail Login Action ";
+    }
 
-	@Override
-	public String getDisplayPath() {
-		// TODO Auto-generated method stub
-		return DISPLAY_PATH;
-	}
+    @Override
+    public String getDisplayName() {
+        // TODO Auto-generated method stub
+        return DISPLAY_NAME;
+    }
 
-	@Override
-	public Optional<String> getMinimumNeoLoadVersion() {
-		// TODO Auto-generated method stub
-		return Optional.absent();
-	}
+    @Override
+    public String getDisplayPath() {
+        // TODO Auto-generated method stub
+        return DISPLAY_PATH;
+    }
 
-	@Override
-	public Optional<String> getMaximumNeoLoadVersion() {
-		// TODO Auto-generated method stub
-		return Optional.absent();
-	}
+    @Override
+    public Optional<String> getMinimumNeoLoadVersion() {
+        // TODO Auto-generated method stub
+        return Optional.absent();
+    }
+
+    @Override
+    public Optional<String> getMaximumNeoLoadVersion() {
+        // TODO Auto-generated method stub
+        return Optional.absent();
+    }
 
 }

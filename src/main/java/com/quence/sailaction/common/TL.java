@@ -10,19 +10,20 @@ package com.quence.sailaction.common;
  * @author rober
  */
 public class TL {
-	private final String messageHeader;
-	private final String currentSessionID;
-	private final String userSequenceID;
+
+    private final String messageHeader;
+    private final String currentSessionID;
+    private final String userSequenceID;
 
     /**
      *
      */
     public TL() {
         this.messageHeader = "TL";
-        this.currentSessionID = "4444";        
+        this.currentSessionID = "4444";
         this.userSequenceID = "88888888";
     }
-    
+
     @Override
     public String toString() {
         return messageHeader + currentSessionID + userSequenceID;

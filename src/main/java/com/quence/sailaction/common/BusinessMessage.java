@@ -5,7 +5,6 @@
  */
 package com.quence.sailaction.common;
 
-
 import java.io.IOException;
 
 /**
@@ -13,6 +12,7 @@ import java.io.IOException;
  * @author rober
  */
 public abstract class BusinessMessage {
+
     protected final String messageType;
     protected final String userTime;
     protected final String traderID;
@@ -23,7 +23,7 @@ public abstract class BusinessMessage {
         this.userTime = MessageFormat.getTime(true);
         this.traderID = Ini.getValue(clientName, "traderID");
     }
-    
+
     protected String getHeader() {
         return messageType + userTime + traderID + userSequenceID;
     }

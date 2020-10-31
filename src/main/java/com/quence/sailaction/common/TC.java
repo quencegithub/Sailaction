@@ -5,7 +5,6 @@
  */
 package com.quence.sailaction.common;
 
-
 import java.io.IOException;
 
 /**
@@ -13,6 +12,7 @@ import java.io.IOException;
  * @author rober
  */
 public final class TC {
+
     private final String messageHeader;     //2
     private final String protocolVersion;   //2
     private final String userID;            //8
@@ -30,14 +30,14 @@ public final class TC {
         this.userID = Ini.getValue(clientName, "userID");
         this.password = Ini.getValue(clientName, "password");
         this.sessionID = "    ";
-        this.time =Ini.getValue(clientName, "TC").substring(24, 30);
-        this.inactivityInterval =Ini.getValue(clientName, "TC").substring(30, 32);
+        this.time = Ini.getValue(clientName, "TC").substring(24, 30);
+        this.inactivityInterval = Ini.getValue(clientName, "TC").substring(30, 32);
         this.exchangeMessageID = Ini.getValue(clientName, "TC").substring(32, 38);
         this.messageTypesNumber = Ini.getValue(clientName, "TC").substring(38, 40);
-        this.messageTypes = Ini.getValue(clientName, "TC").substring(40, Integer.parseInt(this.messageTypesNumber)*2+40);
-     // this.messageTypes = "ERIEIXKBKDKEKFKGKIKJKMKNKOKPKSKXKYKZLAMBMMMUNCNDNGNMNPNTNUNXNYNZPNPUTATETHTKTLTMTOTTBP";
+        this.messageTypes = Ini.getValue(clientName, "TC").substring(40, Integer.parseInt(this.messageTypesNumber) * 2 + 40);
+        // this.messageTypes = "ERIEIXKBKDKEKFKGKIKJKMKNKOKPKSKXKYKZLAMBMMMUNCNDNGNMNPNTNUNXNYNZPNPUTATETHTKTLTMTOTTBP";
     }
-    
+
     /**
      *
      * @return

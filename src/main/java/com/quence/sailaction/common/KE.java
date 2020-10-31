@@ -12,11 +12,12 @@ import java.io.IOException;
  * @author rober
  */
 public class KE extends BusinessMessage {
+
     private final String group1;
     private final String clientIDCodeQualifier;
     private final String clientIDCode;
     private final String group2;
-    
+
     /**
      *
      * @param g1
@@ -32,7 +33,7 @@ public class KE extends BusinessMessage {
         clientIDCode = Ini.getValue(clientName, "clientIDCode");
         group2 = g2;
     }
-    
+
     /**
      *
      * @return

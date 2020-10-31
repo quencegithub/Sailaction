@@ -11,67 +11,66 @@ import com.google.common.base.Optional;
 import com.neotys.extensions.action.Action;
 import com.neotys.extensions.action.ActionParameter;
 import com.neotys.extensions.action.engine.ActionEngine;
-import com.quence.sailaction.logon.SailLogonActionEngine;
-import com.quence.sailaction.send.SailSendMsgAction;
 
 public class SailLogOutAction implements Action {
-	private static final String BUNDLE_NAME = "com.quence.sailaction.logout.bundle";
-	private static final String DISPLAY_NAME = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayName");
-	private static final String DISPLAY_PATH = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayPath");
-	private static final ImageIcon DISPLAY_ICON = new ImageIcon (SailLogOutAction.class.getResource(ResourceBundle.getBundle(BUNDLE_NAME,Locale.getDefault()).getString("iconFile")));
 
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return "Sail logout";
-	}
+    private static final String BUNDLE_NAME = "com.quence.sailaction.logout.bundle";
+    private static final String DISPLAY_NAME = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayName");
+    private static final String DISPLAY_PATH = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("displayPath");
+    private static final ImageIcon DISPLAY_ICON = new ImageIcon(SailLogOutAction.class.getResource(ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault()).getString("iconFile")));
 
-	@Override
-	public List<ActionParameter> getDefaultActionParameters() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public String getType() {
+        // TODO Auto-generated method stub
+        return "Sail logout";
+    }
 
-	@Override
-	public Class<? extends ActionEngine> getEngineClass() {
-		// TODO Auto-generated method stub
-		return SailLogOutActionEngine.class;
-	}
+    @Override
+    public List<ActionParameter> getDefaultActionParameters() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Icon getIcon() {
-		// TODO Auto-generated method stub
-		return DISPLAY_ICON;
-	}
+    @Override
+    public Class<? extends ActionEngine> getEngineClass() {
+        // TODO Auto-generated method stub
+        return SailLogOutActionEngine.class;
+    }
 
-	@Override
-	public String getDescription() {
-		// TODO Auto-generated method stub
-		return " Sail Logout Action ";
-	}
+    @Override
+    public Icon getIcon() {
+        // TODO Auto-generated method stub
+        return DISPLAY_ICON;
+    }
 
-	@Override
-	public String getDisplayName() {
-		// TODO Auto-generated method stub
-		return DISPLAY_NAME;
-	}
+    @Override
+    public String getDescription() {
+        // TODO Auto-generated method stub
+        return " Sail Logout Action ";
+    }
 
-	@Override
-	public String getDisplayPath() {
-		// TODO Auto-generated method stub
-		return DISPLAY_PATH;
-	}
+    @Override
+    public String getDisplayName() {
+        // TODO Auto-generated method stub
+        return DISPLAY_NAME;
+    }
 
-	@Override
-	public Optional<String> getMinimumNeoLoadVersion() {
-		// TODO Auto-generated method stub
-		return  Optional.absent();
-	}
+    @Override
+    public String getDisplayPath() {
+        // TODO Auto-generated method stub
+        return DISPLAY_PATH;
+    }
 
-	@Override
-	public Optional<String> getMaximumNeoLoadVersion() {
-		// TODO Auto-generated method stub
-		return  Optional.absent();
-	}
+    @Override
+    public Optional<String> getMinimumNeoLoadVersion() {
+        // TODO Auto-generated method stub
+        return Optional.absent();
+    }
+
+    @Override
+    public Optional<String> getMaximumNeoLoadVersion() {
+        // TODO Auto-generated method stub
+        return Optional.absent();
+    }
 
 }
